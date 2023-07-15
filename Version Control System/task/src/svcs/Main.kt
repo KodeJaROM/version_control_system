@@ -5,7 +5,7 @@ import java.io.File
 
 //Creating a map with the SVCS commands
 val helpList = mapOf(
-//    "config" to "Get and set a username.",
+    "config" to "Get and set a username.",
     "add" to "Add a file to the index.",
     "log" to "Show commit logs.",
     "commit" to "Save changes.",
@@ -15,31 +15,50 @@ val helpList = mapOf(
 
 fun main(args: Array<String>) {
     val input = args.firstOrNull()?.toString() ?: ""
-    val splitInput = input.split(" ")
     val vcsDir = File(System.getProperty("user.dir"), "vcs")
     vcsDir.mkdir()
     val usernameFile = File(vcsDir, "config.txt")
-
+    val indexFile = File(vcsDir, "index.txt")
 
     if (input.isEmpty() || input == "--help") {
         println("These are SVCS commands:")
         for ((key, value) in helpList)
             println("$key $value")
-    } else if (helpList.containsKey(input)) {
+    } else if (helpList.containsKey(input) && input != "config" && input != "add") {
         println(helpList[input])
 
-//  Implementing the config command and creating a vcs folder to store username and index
-    } else if (input == "config") {
+//  Implementing the config command and creating a vcs folder to store username
+    } else if (input == "config" && args.size == 1) {
         if (usernameFile.exists()) {
             val username = usernameFile.readText()
             println("The username is $username.")
         } else {
             println("Please, tell me who you are.")
         }
-    } else if (splitInput[0] == "config" && splitInput.size == 2){
-        usernameFile.writeText(splitInput[1])
-        val username = usernameFile.readText()
+    } else if (args[0] == "config" && args.size == 2) {
+        val username = args[1]
+        usernameFile.writeText(username)
         println("The username is $username.")
+
+//        Implementing the add command and creating an index
+    } else if (input == "add" && args.size == 1) {
+        if (indexFile.exists()) {
+            val index = indexFile.readText()
+            println("Tracked files:\n$index")
+        } else {
+            println("Add a file to the index.")
+        }
+    } else if (args[0] == "add" && args.size == 2) {
+        val track = args[1]
+        if (!File(track).exists()) {
+            println("Can't find '$track'.")
+        } else {
+            if (!indexFile.exists()) {
+                indexFile.createNewFile()
+            }
+            indexFile.appendText("$track\n")
+            println("The file '$track' is tracked.")
+        }
     } else {
         println("'$input' is not a SVCS command.")
     }
