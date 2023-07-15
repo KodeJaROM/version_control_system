@@ -20,6 +20,7 @@ fun main(args: Array<String>) {
     vcsDir.mkdir()
     val usernameFile = File(vcsDir, "config.txt")
 
+
     if (input.isEmpty() || input == "--help") {
         println("These are SVCS commands:")
         for ((key, value) in helpList)
@@ -28,16 +29,17 @@ fun main(args: Array<String>) {
         println(helpList[input])
 
 //  Implementing the config command and creating a vcs folder to store username and index
-    } else if (splitInput[0] == "config" && splitInput.size == 1) {
-        when {// TODO:  
-
+    } else if (input == "config") {
+        if (usernameFile.exists()) {
+            val username = usernameFile.readText()
+            println("The username is $username.")
+        } else {
+            println("Please, tell me who you are.")
         }
-
-
-
-
-
-
+    } else if (splitInput[0] == "config" && splitInput.size == 2){
+        usernameFile.writeText(splitInput[1])
+        val username = usernameFile.readText()
+        println("The username is $username.")
     } else {
         println("'$input' is not a SVCS command.")
     }
