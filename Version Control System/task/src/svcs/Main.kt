@@ -17,9 +17,11 @@ fun main(args: Array<String>) {
     val input = args.firstOrNull()?.toString() ?: ""
     val vcsDir = File(System.getProperty("user.dir"), "vcs")
     vcsDir.mkdir()
+
     val usernameFile = File(vcsDir, "config.txt")
     val indexFile = File(vcsDir, "index.txt")
     val logFile = File(vcsDir, "log.txt")
+    val commitFolder = File(vcsDir, "commit")
 
     if (input.isEmpty() || input == "--help") {
         println("These are SVCS commands:")
@@ -51,15 +53,15 @@ fun main(args: Array<String>) {
             println("Add a file to the index.")
         }
     } else if (args[0] == "add" && args.size == 2) {
-        val track = args[1]
-        if (!File(track).exists()) {
-            println("Can't find '$track'.")
+        val fileName = args[1]
+        if (!File(fileName).exists()) {
+            println("Can't find '$fileName'.")
         } else {
             if (!indexFile.exists()) {
                 indexFile.createNewFile()
             }
-            indexFile.appendText("$track\n")
-            println("The file '$track' is tracked.")
+            indexFile.appendText("$fileName\n")
+            println("The file '$fileName' is tracked.")
         }
 
 //  Implementing the log command: If log text exists print it, otherwise print "No commits yet."
@@ -70,9 +72,34 @@ fun main(args: Array<String>) {
         } else {
             println("No commits yet.")
         }
-// Implementing the commit command
-    } else if () {
+// Implementing the commit command and making sure a message is entered
+    } else if (args[0] == "commit" && args.size == 1) {
+        println("Message was not passed.")
+    } else if (args[0] == "commit" && args.size == 2) {// TODO: I finally have a way to check if files are changed, now I need to save them inside another sub folder 
+//  This value stores the names of the files to copy
+        val indexLines = indexFile.readLines()
+        val commitMessage = args[1]
+        var areSomeFilesDifferent = false
+        for (fileName in indexLines) {
+            val firstFilePath = File(System.getProperty("user.dir"), fileName)
+            val secondFilePath = File(commitFolder, fileName)
 
+            val firstFile = File(firstFilePath.absolutePath)
+            val secondFile = File(secondFilePath.absolutePath)
+
+            if (firstFile.readText() != secondFile.readText()) {
+                areSomeFilesDifferent = true
+                break // No need to continue checking other files once a difference is found
+            }
+        }
+        println(areSomeFilesDifferent)
+
+
+//  Check if a commit folder does not exist, then create the commit folder and add a folder labeled with the hash value of the files that will be copied into it
+        if (!commitFolder.exists()) {
+            commitFolder.mkdir()
+
+        }
     } else {
         println("'$input' is not a SVCS command.")
     }
