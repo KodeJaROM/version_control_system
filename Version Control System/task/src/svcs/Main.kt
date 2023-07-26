@@ -21,7 +21,7 @@ fun main(args: Array<String>) {
     val usernameFile = File(vcsDir, "config.txt")
     val indexFile = File(vcsDir, "index.txt")
     val logFile = File(vcsDir, "log.txt")
-    val commitFolder = File(vcsDir, "commit")
+    val commitDir = File(vcsDir, "commit")
 
     if (input.isEmpty() || input == "--help") {
         println("These are SVCS commands:")
@@ -75,31 +75,67 @@ fun main(args: Array<String>) {
 // Implementing the commit command and making sure a message is entered
     } else if (args[0] == "commit" && args.size == 1) {
         println("Message was not passed.")
-    } else if (args[0] == "commit" && args.size == 2) {// TODO: I finally have a way to check if files are changed, now I need to save them inside another sub folder 
-//  This value stores the names of the files to copy
+    } else if (args[0] == "commit" && args.size == 2) {
         val indexLines = indexFile.readLines()
         val commitMessage = args[1]
-        var areSomeFilesDifferent = false
-        for (fileName in indexLines) {
-            val firstFilePath = File(System.getProperty("user.dir"), fileName)
-            val secondFilePath = File(commitFolder, fileName)
+        val commitId = "ID-$commitMessage"
 
-            val firstFile = File(firstFilePath.absolutePath)
-            val secondFile = File(secondFilePath.absolutePath)
+//  creating the log file
+        if (!logFile.exists()) {
+            logFile.createNewFile()
+        }
 
-            if (firstFile.readText() != secondFile.readText()) {
-                areSomeFilesDifferent = true
-                break // No need to continue checking other files once a difference is found
+//        Checking if the log file is empty, if it is copy the files to a new folder labeled with the commit ID
+        if (logFile.readText().isEmpty()) {
+//            create a folder in commits with commit id name
+            val subCommitDir = File(commitDir, commitId)
+            subCommitDir.mkdir()
+            for (fileName in indexLines) {
+                val wrkDirFilePath = File(System.getProperty("user.dir"), fileName)
+                val wrkDirFile = File(wrkDirFilePath.absolutePath)
+                wrkDirFile.copyTo(subCommitDir)
+            }
+            val username = usernameFile.readText()
+            logFile.writeText("commit $commitId\nAuthor: $username\n$commitMessage")
+            println("Changes are committed.")
+        }
+// Otherwise if the log file is not empty, check if the files have changed, if they have copy to a new folder with the commit ID and print "Changes are committed."
+        else {
+//        Checking if files are different
+            var areSomeFilesDifferent = false
+            for (fileName in indexLines) {
+                val wrkDirFilePath = File(System.getProperty("user.dir"), fileName)
+                val commitDirFilePath = File(commitDir, fileName)
+
+                val wrkDirFile = File(wrkDirFilePath.absolutePath)
+                val commitDirFile = File(commitDirFilePath.absolutePath)
+
+                if (wrkDirFile.readText() != commitDirFile.readText()) {
+                    areSomeFilesDifferent = true
+                    break
+                }
+            }
+            if (!areSomeFilesDifferent) {
+                println("Nothing to commit.")
+            } else {
+//                create a folder in commits with commit id name
+                val subCommitDir = File(commitDir, commitId)
+                subCommitDir.mkdir()
+                for (fileName in indexLines) {
+                    val wrkDirFilePath = File(System.getProperty("user.dir"), fileName)
+                    val wrkDirFile = File(wrkDirFilePath.absolutePath)
+                    wrkDirFile.copyTo(subCommitDir)
+                }
+                val oldText = logFile.readText()
+                val username = usernameFile.readText()
+                logFile.writeText("commit $commitId\nAuthor: $username\n$commitMessage")
+                logFile.appendText(oldText + '\n')
+                println("Changes are committed.")
             }
         }
-        println(areSomeFilesDifferent)
 
 
-//  Check if a commit folder does not exist, then create the commit folder and add a folder labeled with the hash value of the files that will be copied into it
-        if (!commitFolder.exists()) {
-            commitFolder.mkdir()
 
-        }
     } else {
         println("'$input' is not a SVCS command.")
     }
