@@ -21,7 +21,7 @@ fun main(args: Array<String>) {
     val usernameFile = File(vcsDir, "config.txt")
     val indexFile = File(vcsDir, "index.txt")
     val logFile = File(vcsDir, "log.txt")
-    val commitDir = File(vcsDir, "commit")
+    val commitDir = File(vcsDir, "commits")
 
     if (input.isEmpty() || input == "--help") {
         println("These are SVCS commands:")
@@ -88,7 +88,7 @@ fun main(args: Array<String>) {
 //        Checking if the log file is empty, if it is copy the files to a new folder labeled with the commit ID
         if (logFile.readText().isEmpty()) {
 //            create a folder in commits with commit id name
-            val subCommitDir = File(commitDir, commitId)
+            val subCommitDir = File(commitDir, "$commitId.txt")
             subCommitDir.mkdir()
             for (fileName in indexLines) {
                 val wrkDirFilePath = File(System.getProperty("user.dir"), fileName)
@@ -119,7 +119,7 @@ fun main(args: Array<String>) {
                 println("Nothing to commit.")
             } else {
 //                create a folder in commits with commit id name
-                val subCommitDir = File(commitDir, commitId)
+                val subCommitDir = File(commitDir, "$commitId.txt")
                 subCommitDir.mkdir()
                 for (fileName in indexLines) {
                     val wrkDirFilePath = File(System.getProperty("user.dir"), fileName)
