@@ -27,9 +27,6 @@ fun main(args: Array<String>) {
         println("These are SVCS commands:")
         for ((key, value) in helpList)
             println("$key $value")
-//        This else if will need to be removed after implementing the last command
-    } else if (helpList.containsKey(input) && input == "checkout") {
-        println(helpList[input])
 
 //  Implementing the config command and creating a vcs folder to store username
     } else if (input == "config" && args.size == 1) {
@@ -149,8 +146,17 @@ fun main(args: Array<String>) {
                 println("Changes are committed.")
             }
         }
-
-
+    } else if (args[0] == "checkout" && args.size == 1) {
+        println("Commit id was not passed.")
+    } else if (args[0] == "checkout" && args.size == 2) {
+        val commitId = args[1]
+        val subCommitDir = File(commitDir, "$commitId")
+        val wrkDir = File(System.getProperty("user.dir"))
+        if (subCommitDir.exists()) {
+            subCommitDir.copyRecursively(wrkDir)
+        } else {
+            println("Commit does not exist.")
+        }
 
     } else {
         println("'$input' is not a SVCS command.")
