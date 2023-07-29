@@ -144,7 +144,7 @@ fun main(args: Array<String>) {
                 }
                 val oldText = logFile.readText()
                 val username = usernameFile.readText()
-                logFile.writeText("commit $commitId\nAuthor: $username\n$commitMessage")
+                logFile.writeText("commit $commitId\nAuthor: $username\n$commitMessage\n")
                 logFile.appendText(oldText + '\n')
                 println("Changes are committed.")
             }
