@@ -78,8 +78,12 @@ fun main(args: Array<String>) {
     } else if (args[0] == "commit" && args.size == 2) {
         val indexLines = indexFile.readLines()
         val commitMessage = args[1]
-        val commitId = "ID-$commitMessage"
-
+//        val commitId = "ID-$commitMessage"
+        val commitId = "ID-${commitMessage.replace("\\s".toRegex(), "")}"
+        val subCommitDir = File(commitDir, "$commitId")
+        if (!subCommitDir.exists()) {
+            subCommitDir.mkdir()
+        }
 //  creating the log file
         if (!logFile.exists()) {
             logFile.createNewFile()
@@ -88,12 +92,15 @@ fun main(args: Array<String>) {
 //        Checking if the log file is empty, if it is copy the files to a new folder labeled with the commit ID
         if (logFile.readText().isEmpty()) {
 //            create a folder in commits with commit id name
-            val subCommitDir = File(commitDir, "$commitId.txt")
-            subCommitDir.mkdir()
+//            val subCommitDir = File(commitDir, "$commitId")
+//            if (!subCommitDir.exists()) {
+//                subCommitDir.mkdir()
+//            }
             for (fileName in indexLines) {
                 val wrkDirFilePath = File(System.getProperty("user.dir"), fileName)
                 val wrkDirFile = File(wrkDirFilePath.absolutePath)
-                wrkDirFile.copyTo(subCommitDir)
+//                wrkDirFile.copyTo(subCommitDir, overwrite = true)
+                wrkDirFile.copyTo(File(subCommitDir, fileName), overwrite = true)
             }
             val username = usernameFile.readText()
             logFile.writeText("commit $commitId\nAuthor: $username\n$commitMessage")
@@ -103,9 +110,15 @@ fun main(args: Array<String>) {
         else {
 //        Checking if files are different
             var areSomeFilesDifferent = false
+
+//            This reads the first line in the log file and assigns it to the value preCommitId
+            val prevCommitId = logFile.readLines().firstOrNull()?.substringAfter("commit ")
+            val prevSubCommitDir = File(commitDir, "$prevCommitId")
+
+
             for (fileName in indexLines) {
                 val wrkDirFilePath = File(System.getProperty("user.dir"), fileName)
-                val commitDirFilePath = File(commitDir, fileName)
+                val commitDirFilePath = File(prevSubCommitDir, fileName)
 
                 val wrkDirFile = File(wrkDirFilePath.absolutePath)
                 val commitDirFile = File(commitDirFilePath.absolutePath)
@@ -115,16 +128,19 @@ fun main(args: Array<String>) {
                     break
                 }
             }
-            if (!areSomeFilesDifferent) {
+            if (areSomeFilesDifferent == false) {
                 println("Nothing to commit.")
             } else {
 //                create a folder in commits with commit id name
-                val subCommitDir = File(commitDir, "$commitId.txt")
-                subCommitDir.mkdir()
+                val subCommitDir = File(commitDir, "$commitId")
+//                if (!subCommitDir.exists()) {
+//                    subCommitDir.mkdir()
+//                }
                 for (fileName in indexLines) {
                     val wrkDirFilePath = File(System.getProperty("user.dir"), fileName)
                     val wrkDirFile = File(wrkDirFilePath.absolutePath)
-                    wrkDirFile.copyTo(subCommitDir)
+//                    wrkDirFile.copyTo(subCommitDir, overwrite = true)
+                    wrkDirFile.copyTo(File(subCommitDir, fileName), overwrite = true)
                 }
                 val oldText = logFile.readText()
                 val username = usernameFile.readText()
