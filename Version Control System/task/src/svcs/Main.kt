@@ -153,7 +153,8 @@ fun main(args: Array<String>) {
         val subCommitDir = File(commitDir, "$commitId")
         val wrkDir = File(System.getProperty("user.dir"))
         if (subCommitDir.exists()) {
-            subCommitDir.copyRecursively(wrkDir)
+            subCommitDir.copyRecursively(wrkDir, true)
+            println("Switched to commit $commitId.")
         } else {
             println("Commit does not exist.")
         }
