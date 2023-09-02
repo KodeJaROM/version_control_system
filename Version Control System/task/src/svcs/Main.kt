@@ -2,31 +2,43 @@ package svcs
 
 import java.io.File
 
+val vcsDir = File(System.getProperty("user.dir"), "vcs")
+val usernameFile = File(vcsDir, "config.txt")
+val indexFile = File(vcsDir, "index.txt")
+val logFile = File(vcsDir, "log.txt")
+val commitDir = File(vcsDir, "commits")
 
-//Creating a map with the SVCS commands
-val helpList = mapOf(
-    "config" to "Get and set a username.",
-    "add" to "Add a file to the index.",
-    "log" to "Show commit logs.",
-    "commit" to "Save changes.",
-    "checkout" to "Restore a file.",
-)
+//help function: This prints the available commands
+fun help() {
+    val helpList = mapOf(
+        "config" to "Get and set a username.",
+        "add" to "Add a file to the index.",
+        "log" to "Show commit logs.",
+        "commit" to "Save changes.",
+        "checkout" to "Restore a file.",
+    )
+    println("These are SVCS commands:")
+    for ((key, value) in helpList)
+        println("$key $value")
+}
 
+//log function: If log text exists print it, otherwise print "No commits yet."
+fun log() {
+    if (logFile.exists()) {
+        val log = logFile.readText()
+        println(log)
+    } else {
+        println("No commits yet.")
+    }
+}
 
 fun main(args: Array<String>) {
     val input = args.firstOrNull()?.toString() ?: ""
-    val vcsDir = File(System.getProperty("user.dir"), "vcs")
     vcsDir.mkdir()
 
-    val usernameFile = File(vcsDir, "config.txt")
-    val indexFile = File(vcsDir, "index.txt")
-    val logFile = File(vcsDir, "log.txt")
-    val commitDir = File(vcsDir, "commits")
 
     if (input.isEmpty() || input == "--help") {
-        println("These are SVCS commands:")
-        for ((key, value) in helpList)
-            println("$key $value")
+        help()
 
 //  Implementing the config command and creating a vcs folder to store username
     } else if (input == "config" && args.size == 1) {
@@ -61,14 +73,8 @@ fun main(args: Array<String>) {
             println("The file '$fileName' is tracked.")
         }
 
-//  Implementing the log command: If log text exists print it, otherwise print "No commits yet."
     } else if (input == "log") {
-        if (logFile.exists()) {
-            val log = logFile.readText()
-            println(log)
-        } else {
-            println("No commits yet.")
-        }
+        log()
 // Implementing the commit command and making sure a message is entered
     } else if (args[0] == "commit" && args.size == 1) {
         println("Message was not passed.")
