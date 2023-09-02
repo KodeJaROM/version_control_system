@@ -80,19 +80,34 @@ fun log() {
     }
 }
 
+//checkout function: copy files from a specific commit to directory
+fun checkout(args: Array<String>) {
+    when (args.size) {
+        1 -> println("Commit id was not passed.")
+        2 -> {
+            val commitId = args[1]
+            val subCommitDir = File(commitDir, "$commitId")
+            val wrkDir = File(System.getProperty("user.dir"))
+            if (subCommitDir.exists()) {
+                subCommitDir.copyRecursively(wrkDir, true)
+                println("Switched to commit $commitId.")
+            } else {
+                println("Commit does not exist.")
+            }
+        }
+    }
+}
+
 fun main(args: Array<String>) {
     val input = args.firstOrNull()?.toString() ?: ""
     vcsDir.mkdir()
 
     if (input.isEmpty() || input == "--help") {
         help()
-
     } else if (input == "config") {
         config(args)
-
     } else if (input == "add") {
         add(args)
-
     } else if (input == "log") {
         log()
 // Implementing the commit command and making sure a message is entered
@@ -172,19 +187,8 @@ fun main(args: Array<String>) {
                 println("Changes are committed.")
             }
         }
-    } else if (args[0] == "checkout" && args.size == 1) {
-        println("Commit id was not passed.")
-    } else if (args[0] == "checkout" && args.size == 2) {
-        val commitId = args[1]
-        val subCommitDir = File(commitDir, "$commitId")
-        val wrkDir = File(System.getProperty("user.dir"))
-        if (subCommitDir.exists()) {
-            subCommitDir.copyRecursively(wrkDir, true)
-            println("Switched to commit $commitId.")
-        } else {
-            println("Commit does not exist.")
-        }
-
+    } else if (input == "checkout") {
+        checkout(args)
     } else {
         println("'$input' is not a SVCS command.")
     }
