@@ -70,7 +70,7 @@ fun add(args: Array<String>) {
     }
 }
 
-//log function: If log text exists print it, otherwise print "No commits yet."
+//log function: If the commit log file exists print it, otherwise print "No commits yet."
 fun log() {
     if (logFile.exists()) {
         val log = logFile.readText()
@@ -80,66 +80,66 @@ fun log() {
     }
 }
 
-//commit function: Copies the files to a commit folder todo this function needs to be cleaned up
 fun commit(args: Array<String>) {
+
+    fun copyFilesToCommitDir(indexLines: List<String>, subCommitDir: File) {
+        for (fileName in indexLines) {
+            val wrkDirFilePath = File(System.getProperty("user.dir"), fileName)
+            val wrkDirFile = File(wrkDirFilePath.absolutePath)
+            wrkDirFile.copyTo(File(subCommitDir, fileName), overwrite = true)
+        }
+
+    }
+
+    fun areSomeFilesDifferent(indexLines: List<String>): Boolean {
+        val prevCommitId = logFile.readLines().firstOrNull()?.substringAfter("commit ")
+        val prevSubCommitDir = File(commitDir, "$prevCommitId")
+        for (fileName in indexLines) {
+            val wrkDirFilePath = File(System.getProperty("user.dir"), fileName)
+            val commitDirFilePath = File(prevSubCommitDir, fileName)
+
+            val wrkDirFile = File(wrkDirFilePath.absolutePath)
+            val commitDirFile = File(commitDirFilePath.absolutePath)
+
+            if (commitDirFilePath == null || !commitDirFilePath.exists()) {
+                return true
+            }
+            if (wrkDirFile.readText() != commitDirFile.readText()) {
+                return true
+            }
+        }
+        return false
+    }
+
     when (args.size) {
         1 -> println("Message was not passed.")
         2 -> {
             val indexLines = indexFile.readLines()
             val commitMessage = args[1]
             val commitId = "ID-${commitMessage.replace("\\s".toRegex(), "")}"
-            val subCommitDir = File(commitDir, "$commitId")
+            val subCommitDir = File(commitDir, commitId)
+
             if (!subCommitDir.exists()) {
                 subCommitDir.mkdir()
             }
             if (!logFile.exists()) {
                 logFile.createNewFile()
             }
-//        Checking if the log file is empty, if it is copy the files to a new folder labeled with the commit ID
+
             if (logFile.readText().isEmpty()) {
-                for (fileName in indexLines) {
-                    val wrkDirFilePath = File(System.getProperty("user.dir"), fileName)
-                    val wrkDirFile = File(wrkDirFilePath.absolutePath)
-                    wrkDirFile.copyTo(File(subCommitDir, fileName), overwrite = true)
-                }
+                copyFilesToCommitDir(indexLines, subCommitDir)
                 val username = usernameFile.readText()
                 logFile.writeText("commit $commitId\nAuthor: $username\n$commitMessage")
                 println("Changes are committed.")
-            }
-// Otherwise if the log file is not empty, check if the files have changed, if they have copy to a new folder with the commit ID and print "Changes are committed."
-            else {
-//        Checking if files are different
-                var areSomeFilesDifferent = false
-                val prevCommitId = logFile.readLines().firstOrNull()
-                    ?.substringAfter("commit ")//This reads the first line in the log file and assigns it to the value prevCommitId
-                val prevSubCommitDir = File(commitDir, "$prevCommitId")
-
-                for (fileName in indexLines) {
-                    val wrkDirFilePath = File(System.getProperty("user.dir"), fileName)
-                    val commitDirFilePath = File(prevSubCommitDir, fileName)
-
-                    val wrkDirFile = File(wrkDirFilePath.absolutePath)
-                    val commitDirFile = File(commitDirFilePath.absolutePath)
-
-                    if (wrkDirFile.readText() != commitDirFile.readText()) {
-                        areSomeFilesDifferent = true
-                        break
-                    }
-                }
-                if (areSomeFilesDifferent == false) {
+            } else {
+                if (!areSomeFilesDifferent(indexLines)) {
                     println("Nothing to commit.")
                 } else {
-//                create a folder in commits with commit id name
-                    val subCommitDir = File(commitDir, "$commitId")
-                    for (fileName in indexLines) {
-                        val wrkDirFilePath = File(System.getProperty("user.dir"), fileName)
-                        val wrkDirFile = File(wrkDirFilePath.absolutePath)
-                        wrkDirFile.copyTo(File(subCommitDir, fileName), overwrite = true)
-                    }
+                    copyFilesToCommitDir(indexLines, subCommitDir)
                     val oldText = logFile.readText()
                     val username = usernameFile.readText()
-                    logFile.writeText("commit $commitId\nAuthor: $username\n$commitMessage\n")
-                    logFile.appendText(oldText + '\n')
+                    logFile.writeText("commit $commitId\nAuthor: $username\n$commitMessage")
+                    logFile.appendText('\n' + oldText)
                     println("Changes are committed.")
                 }
             }
@@ -147,7 +147,8 @@ fun commit(args: Array<String>) {
     }
 }
 
-//checkout function: copy files from a specific commit to directory
+
+//checkout function: copy files from a specific commit to working directory
 fun checkout(args: Array<String>) {
     when (args.size) {
         1 -> println("Commit id was not passed.")
@@ -169,20 +170,14 @@ fun main(args: Array<String>) {
     val input = args.firstOrNull()?.toString() ?: ""
     vcsDir.mkdir()
 
-    if (input.isEmpty() || input == "--help") {
-        help()
-    } else if (input == "config") {
-        config(args)
-    } else if (input == "add") {
-        add(args)
-    } else if (input == "log") {
-        log()
-    } else if (input == "commit") {
-        commit(args)
-    } else if (input == "checkout") {
-        checkout(args)
-    } else {
-        println("'$input' is not a SVCS command.")
+    when (input) {
+        "", "--help" -> help() //Also calls the help function if input is empty
+        "config" -> config(args)
+        "add" -> add(args)
+        "log" -> log()
+        "commit" -> commit(args)
+        "checkout" -> checkout(args)
+        else -> println("'$input' is not a SVCS command.")
     }
 }
 
